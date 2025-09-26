@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>p4rachutes. — Photography</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;600;700;800&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
+
+    <style>
+      :root{--bg-top:#07080a;--bg-bottom:#1f2326;--accent:#7289da;--ui-weak:rgba(255,255,255,0.03);--muted:#a8b3bf;--text:#eef6ff;--stroke:rgba(0,0,0,0.56)}
+      *{box-sizing:border-box}
+      html,body{height:100%;margin:0;font-family:'Space Grotesk',system-ui,-apple-system,'Segoe UI',Roboto,Arial;color:var(--text);background:linear-gradient(180deg,var(--bg-top),var(--bg-bottom));-webkit-font-smoothing:antialiased}
+      .bg-glow{position:fixed;inset:0;z-index:-1;pointer-events:none;background-image:radial-gradient(600px 280px at 12% 18%, rgba(114,137,218,0.06), transparent 12%),radial-gradient(420px 260px at 84% 70%, rgba(64,64,70,0.03), transparent 12%)}
+      #progress{position:fixed;left:0;top:0;height:4px;background:linear-gradient(90deg,var(--accent),#9aa7d8);width:0;z-index:9999;border-radius:3px}
+      header{position:fixed;left:16px;right:16px;top:18px;padding:12px 18px;display:flex;align-items:center;justify-content:space-between;gap:20px;z-index:120;border-radius:12px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border:1px solid rgba(255,255,255,0.04);backdrop-filter: blur(10px) saturate(130%);-webkit-backdrop-filter: blur(10px) saturate(130%)}
+      .brand{font-family:'Playfair Display',serif;font-weight:700;font-size:18px;color:rgba(235,241,255,0.72);letter-spacing:0.6px;-webkit-text-stroke:0.35px var(--stroke)}
+      nav{display:flex;gap:12px;align-items:center}
+      nav a{color:var(--muted);text-decoration:none;padding:8px 12px;border-radius:999px;font-size:13px}
+      main{padding:28px}
+
+      /* BANNER */
+      .banner{position:relative;border-radius:14px;overflow:hidden;margin-top:82px;height:68vh;min-height:520px;box-shadow:0 48px 140px rgba(0,0,0,0.65)}
+      .banner-bg{position:absolute;inset:0;background-size:cover;background-position:center;filter:blur(6px) saturate(122%);transform:scale(1.01);opacity:0.6}
+      .banner-dim{position:absolute;inset:0;background:linear-gradient(180deg, rgba(2,6,10,0.14), rgba(2,6,10,0.22));}
+      .banner-panel{position:relative;z-index:6;inset:0;padding:48px;display:flex;flex-direction:column;justify:center;align-items:flex-start;height:100%}
+      .banner-panel .hero-eyebrow{font-size:12px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;text-shadow:0 2px 8px rgba(0,0,0,0.55)}
+      .banner-panel .hero-title{font-family:'Playfair Display',serif;font-size:42px;margin:10px 0 8px 0;color:var(--text);-webkit-text-stroke:0.62px var(--stroke);text-shadow:0 34px 60px rgba(0,0,0,0.62)}
+      .banner-panel .hero-sub{color:var(--muted);line-height:1.6;font-size:16px;text-shadow:0 2px 6px rgba(0,0,0,0.6);max-width:66%}
+
+      /* gallery grid */
+      .gallery-wrap{padding:18px 0}
+      .gallery-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+      .photo{position:relative;border-radius:12px;overflow:hidden;background:var(--ui-weak);border:1px solid rgba(255,255,255,0.03);cursor:pointer;transition:transform .28s cubic-bezier(.2,.9,.2,1),box-shadow .28s}
+      .photo:hover{transform:translateY(-8px);box-shadow:0 28px 90px rgba(0,0,0,0.45)}
+
+      /* fixed card ratio so layout stays consistent; images are COVER, centered, filling the card (no letterbox) */
+      .imgwrap{width:100%;display:block;background:#050608}
+      .photo img{width:100%;height:100%;object-fit:cover;object-position:center center;display:block}
+      .photo.big{grid-column:span 2}
+
+      /* hover metadata */
+      .meta{position:absolute;left:12px;bottom:12px;padding:8px 10px;border-radius:8px;background:linear-gradient(180deg, rgba(0,0,0,0.26), rgba(0,0,0,0.36));color:#fff;font-weight:600;font-size:13px;opacity:0;transform:translateY(6px);transition:opacity .18s ease,transform .18s ease;pointer-events:none}
+      .photo:hover .meta{opacity:1;transform:none}
+
+      @media (max-width:1100px){.gallery-grid{grid-template-columns:repeat(2,1fr)}.banner-panel .hero-sub{max-width:100%}}
+      @media (max-width:720px){.gallery-grid{grid-template-columns:1fr}.banner{height:50vh}.banner-panel{padding:18px}.banner-panel .hero-title{font-size:28px}}
+
+      /* lightbox */
+      #photo-overlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:28px;background:rgba(2,6,10,0.62);backdrop-filter:blur(22px) saturate(140%);-webkit-backdrop-filter:blur(22px) saturate(140%);opacity:0;pointer-events:none;transition:opacity .28s ease;z-index:9999}
+      #photo-overlay.open{opacity:1;pointer-events:auto}
+      #overlay-frame{max-width:1200px;width:100%;max-height:88vh;border-radius:14px;overflow:hidden;display:grid;grid-template-columns:1fr 420px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border:1px solid rgba(255,255,255,0.04);backdrop-filter:blur(18px) saturate(140%)}
+      #overlay-img{background-size:contain;background-repeat:no-repeat;background-position:center;min-height:64vh;background-color:#050608}
+      #overlay-side{padding:18px;display:flex;flex-direction:column;gap:12px}
+      #overlay-side h3{margin:0;font-size:20px;color:var(--text);-webkit-text-stroke:0.35px var(--stroke)}
+      #overlay-side p{color:var(--muted);line-height:1.6}
+    </style>
+  </head>
+  <body>
+    <div class="bg-glow" aria-hidden="true"></div>
+    <div id="progress" aria-hidden="true"></div>
+
+    <header>
+      <div class="brand">p4rachutes.</div>
+      <nav>
+        <a href="#gallery">Gallery</a>
+      </nav>
+    </header>
+
+    <main>
+      <!-- BANNER -->
+      <section class="banner" aria-label="Hero banner">
+        <div id="banner-bg" class="banner-bg" aria-hidden="true"></div>
+        <div class="banner-dim" aria-hidden="true"></div>
+        <div class="banner-panel">
+          <div class="hero-eyebrow">a showcase.</div>
+          <h1 class="hero-title">Life. From my eyes.</h1>
+          <p class="hero-sub">I capture what hits me, the moments most people walk past. The rush of a busy street or the way light falls on something simple. The everyday life you hardly notice. I just try to show them as they are and maybe make you see something you missed</p>
+        </div>
+      </section>
+
+      <!-- GALLERY -->
+      <section id="gallery" class="gallery-wrap">
+        <div class="gallery-grid" id="gallery-grid">
+          <!-- 15 photos. Use CONFIG.bigIndices to mark large boxes. -->
+          <div class="photo" data-index="0"><div class="imgwrap"><img loading="lazy" alt="photo1"></div><div class="meta"></div></div>
+          <div class="photo" data-index="1"><div class="imgwrap"><img loading="lazy" alt="photo2"></div><div class="meta"></div></div>
+          <div class="photo" data-index="2"><div class="imgwrap"><img loading="lazy" alt="photo3"></div><div class="meta"></div></div>
+          <div class="photo" data-index="3"><div class="imgwrap"><img loading="lazy" alt="photo4"></div><div class="meta"></div></div>
+          <div class="photo" data-index="4"><div class="imgwrap"><img loading="lazy" alt="photo5"></div><div class="meta"></div></div>
+          <div class="photo" data-index="5"><div class="imgwrap"><img loading="lazy" alt="photo6"></div><div class="meta"></div></div>
+          <div class="photo" data-index="6"><div class="imgwrap"><img loading="lazy" alt="photo7"></div><div class="meta"></div></div>
+          <div class="photo" data-index="7"><div class="imgwrap"><img loading="lazy" alt="photo8"></div><div class="meta"></div></div>
+          <div class="photo" data-index="8"><div class="imgwrap"><img loading="lazy" alt="photo9"></div><div class="meta"></div></div>
+          <div class="photo" data-index="9"><div class="imgwrap"><img loading="lazy" alt="photo10"></div><div class="meta"></div></div>
+          <div class="photo" data-index="10"><div class="imgwrap"><img loading="lazy" alt="photo11"></div><div class="meta"></div></div>
+          <div class="photo" data-index="11"><div class="imgwrap"><img loading="lazy" alt="photo12"></div><div class="meta"></div></div>
+          <div class="photo" data-index="12"><div class="imgwrap"><img loading="lazy" alt="photo13"></div><div class="meta"></div></div>
+          <div class="photo" data-index="13"><div class="imgwrap"><img loading="lazy" alt="photo14"></div><div class="meta"></div></div>
+          <div class="photo" data-index="14"><div class="imgwrap"><img loading="lazy" alt="photo15"></div><div class="meta"></div></div>
+        </div>
+      </section>
+    </main>
+
+    <!-- LIGHTBOX -->
+    <div id="photo-overlay" aria-hidden="true">
+      <div id="overlay-frame">
+        <div id="overlay-img" role="img" aria-label="photo-large"></div>
+        <aside id="overlay-side">
+          <h3 id="overlay-title">Title</h3>
+          <p id="overlay-desc" class="muted">Caption or technical details.</p>
+          <div class="overlay-controls">
+            <button id="prevBtn" class="overlay-btn">◀</button>
+            <button id="nextBtn" class="overlay-btn">▶</button>
+            <button id="closeBtn" class="overlay-btn">✕</button>
+          </div>
+        </aside>
+      </div>
+    </div>
+
+    <script>
+      // ---------- CONFIG (edit these) ----------
+      const CONFIG = {
+        basePath: 'assets/',
+        hero: 'hero',
+        photos: ['photo1','photo2','photo3','photo4','photo5','photo6','photo7','photo8','photo9','photo10','photo11','photo12','photo13','photo14','photo15'],
+        // 0-based indexes of photos you want to make larger (span 2 columns)
+        bigIndices: [0,3,6],
+        // hover metadata strings. Example: 'f/2.8 · ISO 100 · 35mm'
+        photosMeta: ['f/2.8 · ISO 100 · 35mm','f/4 · ISO 200 · 50mm','f/5.6 · ISO 400 · 24mm','','','','','','','','','','','',''],
+        tryExt: ['.webp','.jpg','.jpeg','.png']
+      };
+
+      // tries extensions and returns first that loads
+      async function findExistingImage(basePath, name){
+        return new Promise(resolve=>{
+          const exts = CONFIG.tryExt; let i=0;
+          function tryNext(){ if(i>=exts.length) return resolve(null); const url = basePath + name + exts[i++]; const img = new Image(); img.onload = ()=> resolve(url); img.onerror = ()=> tryNext(); img.src = url; }
+          tryNext();
+        });
+      }
+
+      (async function initImages(){
+        // banner
+        const bannerBg = document.getElementById('banner-bg');
+        const heroUrl = await findExistingImage(CONFIG.basePath, CONFIG.hero);
+        if(heroUrl) bannerBg.style.backgroundImage = `url('${heroUrl}')`;
+
+        // gallery
+        const photoEls = Array.from(document.querySelectorAll('.photo'));
+        await Promise.all(photoEls.map(async (el)=>{
+          const idx = Number(el.getAttribute('data-index'));
+          const name = CONFIG.photos[idx];
+          if(!name) return;
+          const url = await findExistingImage(CONFIG.basePath, name);
+          const img = el.querySelector('img');
+          const metaEl = el.querySelector('.meta');
+          const meta = (CONFIG.photosMeta && CONFIG.photosMeta[idx]) || el.getAttribute('data-meta') || '';
+
+          if(url){
+            // set src
+            img.src = url; img.alt = name; el.setAttribute('data-bg', `url('${url}')`);
+            // make sure images cover the card and don't leave gaps
+            img.style.objectFit = 'cover';
+            img.style.objectPosition = 'center center';
+            img.style.width = '100%'; img.style.height = '100%';
+
+            if(meta && meta.trim().length){ metaEl.textContent = meta; metaEl.style.display = ''; } else { metaEl.textContent = ''; metaEl.style.display = 'none'; }
+          } else {
+            img.alt = 'missing'; img.src = ''; el.style.background = 'linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01))'; metaEl.style.display='none';
+          }
+        }));
+
+        // apply 'big' markers
+        CONFIG.bigIndices.forEach(i=>{ const el = document.querySelector(`.photo[data-index='${i}']`); if(el) el.classList.add('big'); });
+      })();
+
+      /* progress indicator */
+      (function(){ const progress = document.getElementById('progress'); function onScroll(){ const h = document.documentElement.scrollHeight - innerHeight; const pct = (pageYOffset / Math.max(1,h)) * 100; progress.style.width = pct + '%'; } addEventListener('scroll', throttle(onScroll,16)); onScroll(); function throttle(fn, wait){let last=0;return (...a)=>{const now=Date.now(); if(now-last>wait){ last=now; fn(...a);} }} })();
+
+      /* gallery / lightbox interactions */
+      (function(){
+        const photos = Array.from(document.querySelectorAll('.photo'));
+        const overlay = document.getElementById('photo-overlay');
+        const overlayImg = document.getElementById('overlay-img');
+        const overlayTitle = document.getElementById('overlay-title');
+        const overlayDesc = document.getElementById('overlay-desc');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const closeBtn = document.getElementById('closeBtn');
+        let current = -1;
+
+        function openCompact(i){
+          const el = photos[i];
+          const bg = el.getAttribute('data-bg') || (el.querySelector('img') ? `url('${el.querySelector('img').src}')` : 'none');
+          overlayImg.style.backgroundImage = bg;
+          overlayTitle.textContent = el.querySelector('img').alt || `Photo ${i+1}`;
+          overlayDesc.textContent = el.querySelector('.meta') ? el.querySelector('.meta').textContent : '';
+          overlay.classList.add('open'); overlay.setAttribute('aria-hidden','false');
+          current = i;
+        }
+
+        function openFull(i){ openCompact(i); overlay.classList.add('fullscreen'); document.body.style.overflow = 'hidden'; }
+        function closeAll(){ overlay.classList.remove('open','fullscreen'); overlay.setAttribute('aria-hidden','true'); document.body.style.overflow = ''; }
+        function goto(i){ if(i<0) i = photos.length-1; if(i>=photos.length) i=0; current=i; const el = photos[i]; const bg = el.getAttribute('data-bg') || (el.querySelector('img') ? `url('${el.querySelector('img').src}')` : 'none'); overlayImg.style.backgroundImage = bg; overlayTitle.textContent = el.querySelector('img').alt || `Photo ${i+1}`; overlayDesc.textContent = el.querySelector('.meta') ? el.querySelector('.meta').textContent : ''; }
+
+        photos.forEach((p,idx)=>{ p.addEventListener('click', (e)=>{ e.preventDefault(); openCompact(idx); }); });
+        overlayImg.addEventListener('click', ()=>{ if(!overlay.classList.contains('open')) return; openFull(current); });
+        prevBtn.addEventListener('click', ()=>{ goto(current-1); }); nextBtn.addEventListener('click', ()=>{ goto(current+1); }); closeBtn.addEventListener('click', closeAll);
+
+        addEventListener('keydown', (e)=>{ if(!document.getElementById('photo-overlay').classList.contains('open')) return; if(e.key === 'Escape') closeAll(); if(e.key === 'ArrowLeft') goto(current-1); if(e.key === 'ArrowRight') goto(current+1); if(e.key === 'Enter') openFull(current); });
+        document.getElementById('photo-overlay').addEventListener('click', (e)=>{ if(e.target.id === 'photo-overlay') closeAll(); });
+      })();
+
+      function throttle(fn, wait){let last=0;return (...a)=>{const now=Date.now(); if(now-last>wait){ last=now; fn(...a);} }}
+
+    </script>
+  </body>
+</html>
